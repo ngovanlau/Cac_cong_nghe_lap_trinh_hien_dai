@@ -11,12 +11,10 @@ from courses import dao
 class CourseAppAdminSite(admin.AdminSite):
     site_header = 'Hệ thống khóa học trực tuyến'
 
-
     def get_urls(self):
         return [
             path('course-stats/', self.stats_view)
         ] + super().get_urls()
-
 
     def stats_view(self, request):
         return TemplateResponse(request, 'admin/course-stats.html',{
