@@ -43,12 +43,21 @@ INSTALLED_APPS = [
     'ckeditor',
     'ckeditor_uploader',
     'rest_framework',
-    'drf_yasg'
+    'drf_yasg',
+    'cloudinary'
 ]
 
 CKEDITOR_UPLOAD_PATH = "ckeditors/images/"
 
 AUTH_USER_MODEL = 'courses.User'
+
+import cloudinary
+
+cloudinary.config(
+    cloud_name="dlqybjdte",
+    api_key="129526211846497",
+    api_secret="5dIF5mGFoQmlmI5pYTMnIYjjkqA"
+)
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

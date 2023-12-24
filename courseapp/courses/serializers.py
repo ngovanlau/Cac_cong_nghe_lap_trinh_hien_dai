@@ -1,4 +1,4 @@
-from courses.models import Category, Course, Tag, Lesson
+from courses.models import Category, Course, Tag, Lesson, User
 from rest_framework import serializers
 
 
@@ -14,7 +14,7 @@ class TagSerializer(serializers.ModelSerializer):
         fields = ['id','name']
 
 
-class CourseSerializer(serializers.ModelSerializer):
+class BaseSerializer(serializers.ModelSerializer):
     image = serializers.SerializerMethodField(source='image')
     tags = TagSerializer(many=True)
 
@@ -23,19 +23,36 @@ class CourseSerializer(serializers.ModelSerializer):
             request = self.context.get('request')
             if request:
                 return request.build_absolute_uri('/static/%s' % course.image.name)
+
             return '/static/%s' % course.image.name
 
+
+class CourseSerializer(BaseSerializer):
     class Meta:
         model = Course
         fields = ['id', 'subject', 'description', 'image', 'tags']
 
 
-class LessonSerializer(serializers.ModelSerializer):
-    image = serializers.SerializerMethodField(source='image')
-    tags = TagSerializer(many=True)
-
-    def get_image(self):
-
+class LessonSerializer(BaseSerializer):
     class Meta:
         model = Lesson
-        fields = ['id', 'subject', 'content', 'image', 'courses', 'tags']
+        fields = ['id', 'subject', 'content', 'image', 'course', 'tags']
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'email', 'username', 'password', 'avatar']
+        extra_kwargs = {
+            'password': {
+                'write_only': True
+            }
+        }
+
+    def create(self, validated_data):
+        data = validated_data.copy()
+        u = User(**data)
+        u.set_password(u.password)
+        u.save()
+
+        return u

@@ -1,5 +1,7 @@
-from rest_framework import viewsets, generics
-from courses.models import Category, Course
+from rest_framework import viewsets, generics, status, parsers
+from rest_framework.decorators import action
+from rest_framework.views import Response
+from courses.models import Category, Course, Lesson, Tag, User
 from courses import serializers, paginations
 
 
@@ -8,7 +10,7 @@ class CategoryView(viewsets.ViewSet, generics.ListAPIView):
     serializer_class = serializers.CategorySerializer
 
 
-class CourseView(viewsets.ViewSet, generics. ListAPIView):
+class CourseView(viewsets.ViewSet, generics.ListAPIView):
     queryset = Course.objects.prefetch_related('tags').filter(active=True)
     serializer_class = serializers.CourseSerializer
     pagination_class = paginations.CoursePaginator
@@ -16,9 +18,31 @@ class CourseView(viewsets.ViewSet, generics. ListAPIView):
     def get_queryset(self):
         queries = self.queryset
 
-        q = self.request.query_params.get('q')
+        q = self.request.query_params.get("q")
         if q:
             queries = queries.filter(subject__icontains=q)
 
+        cate_id = self.request.query_params.get('cate_id')
+        if cate_id:
+            queries = queries.filter(category_id=cate_id)
+
         return queries
 
+    @action(methods=['get'], detail=True)
+    def lessons(self, request, pk):
+        lessons = self.get_object().lesson_set.filter(active=True)
+
+        return Response(serializers.LessonSerializer(lessons, many=True,
+                                                     context={'request': request}).data,
+                        status=status.HTTP_200_OK)
+
+
+class LessonView(viewsets.ViewSet, generics.RetrieveAPIView):
+    queryset = Lesson.objects.filter(active=True).all()
+    serializer_class = serializers.LessonSerializer
+
+
+class UserView(viewsets.ViewSet, generics.CreateAPIView):
+    queryset = User.objects.filter(is_active=True)
+    serializer_class = serializers.UserSerializer
+    parser_classes = [parsers.MultiPartParser]
